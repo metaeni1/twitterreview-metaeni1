@@ -132,7 +132,12 @@
         <bpmn:flowNodeRef>TweetAnfragePrufenTask1</bpmn:flowNodeRef>
       </bpmn:lane>
     </bpmn:laneSet>
-    <bpmn:startEvent id="TweetErfasstStartEvent" name="Tweet erfasst" camunda:asyncAfter="true">
+    <bpmn:startEvent id="TweetErfasstStartEvent" name="Tweet erfasst" camunda:asyncAfter="true" camunda:initiator="anfrageStellenderBenutzer">
+      <bpmn:extensionElements>
+        <camunda:formData>
+          <camunda:formField id="tweetContent" label="Gewünschter Tweet" type="string" />
+        </camunda:formData>
+      </bpmn:extensionElements>
       <bpmn:outgoing>SequenceFlow_0traq63</bpmn:outgoing>
     </bpmn:startEvent>
     <bpmn:exclusiveGateway id="PrufergebnisGateway1" name="Prüfergebnis?">
@@ -157,10 +162,6 @@
     <bpmn:endEvent id="TweetAnfrageBehandeltEndEvent" name="Tweet-Anfrage behandelt">
       <bpmn:incoming>SequenceFlow_1tltb4d</bpmn:incoming>
     </bpmn:endEvent>
-    <bpmn:task id="TweetUberarbeitenTask1" name="Tweet überarbeiten">
-      <bpmn:incoming>ZuUberarbeitenSequenceFlow1</bpmn:incoming>
-      <bpmn:outgoing>SequenceFlow_11ebzhq</bpmn:outgoing>
-    </bpmn:task>
     <bpmn:task id="BenutzerinfosAuslesenTask" name="Benutzerinfos auslesen">
       <bpmn:incoming>SequenceFlow_0traq63</bpmn:incoming>
       <bpmn:outgoing>SequenceFlow_02om5wo</bpmn:outgoing>
@@ -214,11 +215,40 @@ var result = tweetContent.toLowerCase().indexOf("gpi");
 
 execution.setVariable("checkResult", (result !== -1 ? "rejected" : "manualCheckRequired"));</bpmn:script>
     </bpmn:scriptTask>
-    <bpmn:scriptTask id="TweetAnfragePrufenTask1" name="Tweet-Anfrage prüfen" scriptFormat="JavaScript">
+    <bpmn:userTask id="TweetAnfragePrufenTask1" name="Tweet-Anfrage prüfen" camunda:candidateGroups="kommabt">
+      <bpmn:extensionElements>
+        <camunda:formData>
+          <camunda:formField id="tweetContent" label="eingereichter Tweet" type="string">
+            <camunda:validation>
+              <camunda:constraint name="readonly" config="true" />
+            </camunda:validation>
+          </camunda:formField>
+          <camunda:formField id="checkResult" label="Prüfergebnis" type="enum">
+            <camunda:value id="rejected" name="abgelehnt" />
+            <camunda:value id="accepted" name="genehmigt" />
+            <camunda:value id="revisable" name="Zu überarbeitet" />
+            <camunda:value id="manualCheckRequired" name="-" />
+          </camunda:formField>
+          <camunda:formField id="checkResultsComment" label="Begründung" type="string" />
+        </camunda:formData>
+      </bpmn:extensionElements>
       <bpmn:incoming>JaSequenceFlow</bpmn:incoming>
       <bpmn:outgoing>SequenceFlow_1qqtoh0</bpmn:outgoing>
-      <bpmn:script>execution.setVariable("checkResult", "accepted");</bpmn:script>
-    </bpmn:scriptTask>
+    </bpmn:userTask>
+    <bpmn:userTask id="TweetUberarbeitenTask1" name="Tweet überarbeiten" camunda:assignee="${anfrageStellenderBenutzer}">
+      <bpmn:extensionElements>
+        <camunda:formData>
+          <camunda:formField id="tweetContent" label="eingereichter Tweet" type="string" />
+          <camunda:formField id="checkResultsComment" label="Begründung" type="string">
+            <camunda:validation>
+              <camunda:constraint name="readonly" config="true" />
+            </camunda:validation>
+          </camunda:formField>
+        </camunda:formData>
+      </bpmn:extensionElements>
+      <bpmn:incoming>ZuUberarbeitenSequenceFlow1</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_11ebzhq</bpmn:outgoing>
+    </bpmn:userTask>
   </bpmn:process>
   <bpmndi:BPMNDiagram id="BPMNDiagram_1">
     <bpmndi:BPMNPlane id="BPMNPlane_1" bpmnElement="Collaboration_1rw4mjy">
@@ -492,9 +522,6 @@ execution.setVariable("checkResult", (result !== -1 ? "rejected" : "manualCheckR
         <di:waypoint x="1400" y="920" />
         <di:waypoint x="1400" y="735" />
       </bpmndi:BPMNEdge>
-      <bpmndi:BPMNShape id="Task_0dzf4cb_di" bpmnElement="TweetUberarbeitenTask1">
-        <dc:Bounds x="1280" y="510" width="100" height="80" />
-      </bpmndi:BPMNShape>
       <bpmndi:BPMNEdge id="SequenceFlow_06d1dco_di" bpmnElement="ZuUberarbeitenSequenceFlow1">
         <di:waypoint x="1190" y="685" />
         <di:waypoint x="1190" y="550" />
@@ -544,8 +571,8 @@ execution.setVariable("checkResult", (result !== -1 ? "rejected" : "manualCheckR
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="MessageFlow_1xivb0l_di" bpmnElement="MessageFlow_1xivb0l">
         <di:waypoint x="1310" y="510" />
-        <di:waypoint x="1310" y="444" />
-        <di:waypoint x="632" y="444" />
+        <di:waypoint x="1310" y="440" />
+        <di:waypoint x="632" y="440" />
         <di:waypoint x="632" y="378" />
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="MessageFlow_15rneql_di" bpmnElement="MessageFlow_15rneql">
@@ -562,8 +589,11 @@ execution.setVariable("checkResult", (result !== -1 ? "rejected" : "manualCheckR
       <bpmndi:BPMNShape id="ScriptTask_0wn2cdh_di" bpmnElement="AufVerboteneWorterPrufenTask">
         <dc:Bounds x="570" y="670" width="100" height="80" />
       </bpmndi:BPMNShape>
-      <bpmndi:BPMNShape id="ScriptTask_0cjt78p_di" bpmnElement="TweetAnfragePrufenTask1">
+      <bpmndi:BPMNShape id="UserTask_0jqt1za_di" bpmnElement="TweetAnfragePrufenTask1">
         <dc:Bounds x="840" y="880" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="UserTask_1c6ip4g_di" bpmnElement="TweetUberarbeitenTask1">
+        <dc:Bounds x="1280" y="510" width="100" height="80" />
       </bpmndi:BPMNShape>
     </bpmndi:BPMNPlane>
   </bpmndi:BPMNDiagram>
