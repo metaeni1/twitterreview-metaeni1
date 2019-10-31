@@ -121,11 +121,11 @@
         <bpmn:flowNodeRef>ExclusiveGateway_1dwscgq</bpmn:flowNodeRef>
         <bpmn:flowNodeRef>StatusMitteilenTask</bpmn:flowNodeRef>
         <bpmn:flowNodeRef>TweetAnfrageBehandeltEndEvent</bpmn:flowNodeRef>
-        <bpmn:flowNodeRef>BenutzerinfosAuslesenTask</bpmn:flowNodeRef>
         <bpmn:flowNodeRef>ManuellePrufungErforderlichGateway</bpmn:flowNodeRef>
         <bpmn:flowNodeRef>ExclusiveGateway_0mlvhqv</bpmn:flowNodeRef>
         <bpmn:flowNodeRef>ExclusiveGateway_1wtykmc</bpmn:flowNodeRef>
         <bpmn:flowNodeRef>AufVerboteneWorterPrufenTask</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>BenutzerinfosAuslesenTask</bpmn:flowNodeRef>
       </bpmn:lane>
       <bpmn:lane id="KommunikationsabteilungLane" name="Kommunikationsabteilung">
         <bpmn:flowNodeRef>TweetSendenTask</bpmn:flowNodeRef>
@@ -162,10 +162,6 @@
     <bpmn:endEvent id="TweetAnfrageBehandeltEndEvent" name="Tweet-Anfrage behandelt">
       <bpmn:incoming>SequenceFlow_1tltb4d</bpmn:incoming>
     </bpmn:endEvent>
-    <bpmn:task id="BenutzerinfosAuslesenTask" name="Benutzerinfos auslesen">
-      <bpmn:incoming>SequenceFlow_0traq63</bpmn:incoming>
-      <bpmn:outgoing>SequenceFlow_02om5wo</bpmn:outgoing>
-    </bpmn:task>
     <bpmn:exclusiveGateway id="ManuellePrufungErforderlichGateway" name="manuelle Prüfung erforderlich?">
       <bpmn:incoming>SequenceFlow_13lsyu7</bpmn:incoming>
       <bpmn:outgoing>NeinSequenceFlow</bpmn:outgoing>
@@ -230,6 +226,7 @@ execution.setVariable("checkResult", (result !== -1 ? "rejected" : "manualCheckR
             <camunda:value id="manualCheckRequired" name="-" />
           </camunda:formField>
           <camunda:formField id="checkResultsComment" label="Begründung" type="string" />
+          <camunda:formField id="vollerName" label="Einreichende Person" type="string" />
         </camunda:formData>
       </bpmn:extensionElements>
       <bpmn:incoming>JaSequenceFlow</bpmn:incoming>
@@ -249,6 +246,10 @@ execution.setVariable("checkResult", (result !== -1 ? "rejected" : "manualCheckR
       <bpmn:incoming>ZuUberarbeitenSequenceFlow1</bpmn:incoming>
       <bpmn:outgoing>SequenceFlow_11ebzhq</bpmn:outgoing>
     </bpmn:userTask>
+    <bpmn:serviceTask id="BenutzerinfosAuslesenTask" name="Benutzerinfos auslesen" camunda:delegateExpression="${getUserInformationAdapter}">
+      <bpmn:incoming>SequenceFlow_0traq63</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_02om5wo</bpmn:outgoing>
+    </bpmn:serviceTask>
   </bpmn:process>
   <bpmndi:BPMNDiagram id="BPMNDiagram_1">
     <bpmndi:BPMNPlane id="BPMNPlane_1" bpmnElement="Collaboration_1rw4mjy">
@@ -424,9 +425,6 @@ execution.setVariable("checkResult", (result !== -1 ? "rejected" : "manualCheckR
           <dc:Bounds x="237" y="585" width="66" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
-      <bpmndi:BPMNShape id="Task_0sorgzo_di" bpmnElement="BenutzerinfosAuslesenTask">
-        <dc:Bounds x="310" y="670" width="100" height="80" />
-      </bpmndi:BPMNShape>
       <bpmndi:BPMNEdge id="SequenceFlow_0traq63_di" bpmnElement="SequenceFlow_0traq63">
         <di:waypoint x="288" y="560" />
         <di:waypoint x="360" y="560" />
@@ -594,6 +592,9 @@ execution.setVariable("checkResult", (result !== -1 ? "rejected" : "manualCheckR
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="UserTask_1c6ip4g_di" bpmnElement="TweetUberarbeitenTask1">
         <dc:Bounds x="1280" y="510" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="ServiceTask_1u8gebk_di" bpmnElement="BenutzerinfosAuslesenTask">
+        <dc:Bounds x="310" y="670" width="100" height="80" />
       </bpmndi:BPMNShape>
     </bpmndi:BPMNPlane>
   </bpmndi:BPMNDiagram>
